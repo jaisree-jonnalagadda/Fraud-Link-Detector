@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fraud Link Detector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: url('https://cdn-icons-png.flaticon.com/512/565/565547.png') no-repeat center center fixed;
+      background-size: 120px;
+      background-color: #f2f2f2;
+      transition: background-image 0.4s, background-color 0.4s;
+    }
+
+    body.dark {
+      background-color: #1e1e1e;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 360px;
+      margin: 100px auto;
+      transition: background 0.3s;
+    }
+
+    .dark .container {
+      background: rgba(43, 43, 43, 0.95);
+      color: #fff;
+    }
+
+    input, button {
+      padding: 10px;
+      width: 100%;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .history {
+      margin-top: 20px;
+      font-size: 0.9em;
+      text-align: left;
+    }
+
+    .toggle {
+      margin-top: 10px;
+      cursor: pointer;
+      font-size: 0.9em;
+      color: #007bff;
+    }
+
+    .dark .toggle {
+      color: #80bfff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔍 Fraud Link Detector</h2>
+    <input type="text" id="urlInput" placeholder="Enter a URL">
+    <button onclick="checkURL()">Check URL</button>
+    <p id="result"></p>
+    <div class="history" id="historyBox"></div>
+    <div class="toggle" onclick="toggleMode()">🌙 Toggle Dark Mode</div>
+  </div>
+
+  <script>
+    const suspiciousKeywords = ["login", "verify", "update", "bank", "account", "free", "win", "prize", "password"];
+    const badTLDs = [".xyz", ".top", ".ru", ".win", ".tk", ".ga"];
+    const blacklistDomains = ["bit.ly", "tinyurl.com", "shorturl.at", "adf.ly"];
+    const history = [];
+
+    const body = document.body;
+
+    function checkURL() {
+      const urlInput = document.getElementById("urlInput");
+      const url = urlInput.value.toLowerCase().trim();
+      const result = document.getElementById("result");
+      const historyBox = document.getElementById("historyBox");
+
+      if (!url) {
+        result.textContent = "Please enter a URL.";
+        result.style.color = "orange";
+        setBackground("default");
+        return;
+      }
+
+      let score = 0;
+
+      if (!url.startsWith("https")) score++;
+      if ((url.match(/-/g) || []).length > 3) score++;
+      if (url.length > 75) score++;
+      if (/^https?:\/\/(\d{1,3}\.){3}\d{1,3}/.test(url)) score += 2;
+
+      suspiciousKeywords.forEach(word => {
+        if (url.includes(word)) score++;
+      });
+
+      badTLDs.forEach(tld => {
+        if (url.endsWith(tld)) score += 2;
+      });
+
+      blacklistDomains.forEach(domain => {
+        if (url.includes(domain)) score += 2;
+      });
+
+      // Show result and image
+      if (score >= 5) {
+        result.textContent = "⚠️ Highly Suspicious URL!";
+        result.style.color = "red";
+        setBackground("scam");
+      } else if (score >= 3) {
+        result.textContent = "⚠️ Might Be Unsafe.";
+        result.style.color = "orange";
+        setBackground("scam");
+      } else {
+        result.textContent = "✅ Looks Safe.";
+        result.style.color = "green";
+        setBackground("safe");
+      }
+
+      history.unshift({ url, status: result.textContent });
+      if (history.length > 5) history.pop();
+
+      historyBox.innerHTML = "<strong>History:</strong><br>" + history.map(h => `🔗 ${h.url} → ${h.status}`).join("<br>");
+      urlInput.value = "";
+    }
+
+    function toggleMode() {
+      body.classList.toggle("dark");
+    }
+
+    function setBackground(status) {
+      if (status === "scam") {
+        body.style.backgroundImage = "url('https://cdn-icons-png.flaticon.com/512/564/564619.png')";
+      } else if (status === "safe") {
+        body.style.backgroundImage = "url('https://cdn-icons-png.flaticon.com/512/190/190411.png')";
+      } else {
+        body.style.backgroundImage = "url('https://cdn-icons-png.flaticon.com/512/565/565547.png')";
+      }
+
+      body.style.backgroundRepeat = "no-repeat";
+      body.style.backgroundPosition = "center";
+      body.style.backgroundSize = "120px";
+    }
+  </script>
+</body>
+</html>
